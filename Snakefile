@@ -38,7 +38,8 @@ rule all:
 			model_name = MODELS,
 			mnm_status=["mnm%s-%s" % (MNM_dist, MNM_frac), "womnm"],
 			pop=["afr", "eur"]),
-		sprime_plot = "output/sprime/%s/sinaplot_topSegment_wMNM_vs_womnm.out.score.pdf" , #% modelNAME
+		expand("output/sprime/{model_name}/sinaplot_topSegment_wMNM_vs_womnm.out.score.pdf" , #% modelNAME
+			model_name = MODELS)
     	# "output/ArchIE/{model_name}/{model_name}_rep{replicate}_mnm%s-%s.txt" % (modelNAME, modelNAME, MNM_dist, MNM_frac),
     	# expand("output/ArchIE/{model_name}/{model_name}_rep{replicate}_mnm%s-%s_afr.txt" % (modelNAME, modelNAME, MNM_dist, MNM_frac), replicate=range(1, replicates+1)),
     	# "output/ArchIE/{model_name}/{model_name}_mnm%s-%s_eur_predicted.txt" % (modelNAME, modelNAME, MNM_dist, MNM_frac),
@@ -143,11 +144,11 @@ rule archie_stats_womnm_afr:
 rule archie_merge:
 	input:
 		# "output/ArchIE/{model_name}/{model_name}_rep{replicate}_mnm%s-%s_{pop}.txt" % (modelNAME, modelNAME, MNM_dist, MNM_frac)
-		expand("output/ArchIE/{model_name}/{model_name}_rep{replicate}_{mnm_status}_{pop}.txt" , #, #% (modelNAME, modelNAME),
-			model_name = MODELS,
-			replicate=range(1, replicates+1),
-			mnm_status=["mnm%s-%s" % (MNM_dist, MNM_frac), "womnm"],
-			pop=["afr", "eur"])
+		expand("output/ArchIE/{{model_name}}/{{model_name}}_rep{replicate}_{{mnm_status}}_{{pop}}.txt" , #, #% (modelNAME, modelNAME),
+			# model_name = MODELS,
+			replicate = range(1, replicates+1))
+			# mnm_status = ["mnm%s-%s" % (MNM_dist, MNM_frac), "womnm"],
+			# pop = ["afr", "eur"])
 		# "output/ArchIE/{model_name}/{model_name}_rep{replicate}_{mnm_status}_{pop}.txt" , #% (modelNAME, modelNAME)
 	output:
 		"output/ArchIE/{model_name}/{model_name}_{mnm_status}_{pop}_test_data.txt" , #% (modelNAME, modelNAME)
@@ -195,7 +196,7 @@ rule archie_predict:
 	params:
 		sge_opts = "-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
 	run:
-		shell("Rscript ArchIE_predict.R {input.training_data} {input.testing_data} {output.predicted_data}")
+		shell("set +o pipefail; Rscript ArchIE_predict.R {input.training_data} {input.testing_data} {output.predicted_data}")
 
 
 #-----------------------------------------------------------------------------
@@ -301,13 +302,13 @@ rule sprime_pullTopSegment:
 rule sprime_mergeTopSegment:
 	input:
 		# expand("output/sprime/{model_name}/{model_name}_rep{replicate}_{mnm_status}.sprime.out.score.top" , #, #% (modelNAME, modelNAME), replicate=range(1, replicates+1))
-		expand("output/sprime/{model_name}/{model_name}_rep{replicate}_{mnm_status}.sprime.out.score.top" , #, #% (modelNAME, modelNAME),
-			model_name = MODELS,
-			replicate=range(1, replicates+1),
-			mnm_status=["mnm%s-%s" % (MNM_dist, MNM_frac), "womnm"])
+		expand("output/sprime/{{model_name}}/{{model_name}}_rep{replicate}_{{mnm_status}}.sprime.out.score.top" , #, #% (modelNAME, modelNAME),
+			# model_name = MODELS,
+			replicate=range(1, replicates+1))
+			# mnm_status=["mnm%s-%s" % (MNM_dist, MNM_frac), "womnm"])
 		# "output/sprime/{model_name}/{model_name}_rep{replicate}_{mnm_status}.sprime.out.score.top" , #% (modelNAME, modelNAME)
 	output:
-		"output/sprime/%s/topSegment_{mnm_status}.out.score" , #% modelNAME
+		"output/sprime/{model_name}/topSegment_{mnm_status}.out.score" , #% modelNAME
 	params:
 	    sge_opts="-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
 #	shell:
@@ -327,34 +328,11 @@ rule sprime_mergeTopSegment:
 
 rule sprime_plot:
 	input:
-	    top_womnm = "output/sprime/%s/topSegment_womnm.out.score" , #, #% modelNAME,
-		top_mnm = "output/sprime/%s/topSegment_wMNM.out.score" , #% modelNAME
+	    top_womnm = "output/sprime/{model_name}/topSegment_womnm.out.score" , #, #% modelNAME,
+		top_mnm = "output/sprime/{model_name}/topSegment_wMNM.out.score" , #% modelNAME
 	output:
-		"output/sprime/%s/sinaplot_topSegment_wMNM_vs_womnm.out.score.pdf" , #% modelNAME
+		"output/sprime/{model_name}/sinaplot_topSegment_wMNM_vs_womnm.out.score.pdf" , #% modelNAME
 	params:
 	    sge_opts = "-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
 	shell:
 		" Rscript plot_sprime_wMNM_vs_woMNM.r {input.top_mnm} {input.top_womnm} {output} "
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

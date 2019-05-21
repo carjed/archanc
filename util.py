@@ -1,4 +1,5 @@
 import random
+import math
 from logging import StreamHandler, getLogger as realGetLogger, Formatter
 import numpy as np
 import pandas as pd
@@ -208,16 +209,20 @@ class generateVCFData:
 
             random.seed(int(snv[1]))
             if random.random() < self.mnm_frac:
-                # make sure a mnm is at least 10bp from its counterpart.
-                # this is to avoid the internal filter of Sprime.
-                mnm_snv = snv
+                num_clust = math.ceil(random.random() * 4) + 1
+                repeat_rows.append(num_clust)
                 dist = random.randint(10, self.mnm_dist)
-                mnm_cand = int(snv[1]) + dist
-                mnm_cand_r = str(round(mnm_cand))
-                mnm_snv[1] = str(mnm_cand_r)
-                mnm_snv[2] = "1_%s" % mnm_cand_r
-                snv_df.append(mnm_snv)
-                repeat_rows.append(2)
+
+                for i in range(1, num_clust):
+
+                    # make sure a mnm is at least 10bp from its counterpart.
+                    # this is to avoid the internal filter of Sprime.
+                    mnm_snv = snv
+                    mnm_snv[2] = "1_%s" % snv[1]
+                    mnm_cand = int(snv[1]) + dist * i
+                    mnm_cand_r = str(round(mnm_cand))
+                    mnm_snv[1] = str(mnm_cand_r)
+                    snv_df.append(mnm_snv)
             else:
                 repeat_rows.append(1)
 
@@ -385,15 +390,18 @@ class generateEigData:
 
             random.seed(snp['POS'])
             if random.random() < self.mnm_frac:
+                num_clust = math.ceil(random.random() * 4) + 1
+                repeat_rows.append(num_clust)
 
                 dist = random.randint(1, self.mnm_dist)
 
-                mnm_snp = snp
-                mnm_snp['POS'] = str(round(int(snp['POS']) + dist))
-                mnm_snp['POS1'] = float(mnm_snp['POS']) / 10e6
-                mnm_snp['ID'] = "1:" + mnm_snp['POS']
-                snp_mnm = snp_mnm.append(mnm_snp, ignore_index=True)
-                repeat_rows.append(2)
+                for i in range(1, num_clust):
+
+                    mnm_snp = snp
+                    mnm_snp['ID'] = "1:" + mnm_snp['POS']
+                    mnm_snp['POS'] = str(round(int(snp['POS']) + dist * i))
+                    mnm_snp['POS1'] = float(mnm_snp['POS']) / 10e6
+                    snp_mnm = snp_mnm.append(mnm_snp, ignore_index=True)
             else:
                 repeat_rows.append(1)
 
