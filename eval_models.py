@@ -71,6 +71,15 @@ def main():
         default=100)
 
     parser.add_argument(
+        "-n",
+        "--mnm_num",
+        help="number of mutations to include in each simulated MNM",
+        nargs='?',
+        type=int,
+        metavar='INT',
+        default=2)
+
+    parser.add_argument(
         "-l",
         "--length",
         help="length of each simulated haplotype",
@@ -262,7 +271,7 @@ def main():
         # parallelize if running multiple replicates
         if args.cpus > 1 and replicates > 1:
             Parallel(n_jobs=args.cpus) \
-                (delayed(util.process_ts)(ts, args.demographic_model, j+1, args.mnm_frac, args.mnm_dist, args.method, out_dir) \
+                (delayed(util.process_ts)(ts, args.demographic_model, j+1, args.mnm_frac, args.mnm_dist, args.mnm_num, args.method, out_dir) \
                 for j, ts in ts_list.items())
 
         # run as single instance if returning only a single replicate
@@ -270,8 +279,8 @@ def main():
         elif replicates == 1:
             for j, ts in ts_list.items():
                 util.process_ts(ts, args.demographic_model, args.replicate_ID,
-                                args.mnm_frac, args.mnm_dist, args.method,
-                                out_dir)
+                                args.mnm_frac, args.mnm_dist, args.mnm_num,
+                                args.method, out_dir)
 
         # for j, ts in enumerate(model):
         #     util.process_ts(ts.variants(), model_label, j, args.mnm_frac, args.mnm_dist, args.method, out_dir)

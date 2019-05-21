@@ -69,15 +69,16 @@ util_log = get_logger(__name__, level="DEBUG")
 ###############################################################################
 # process simulated data
 ###############################################################################
-def process_ts(variants, model_label, rep_label, mnm_frac, mnm_dist, method,
-               out_dir):
+def process_ts(variants, model_label, rep_label, mnm_frac, mnm_dist, mnm_num,
+                method, out_dir):
     if method == "archie":
         eig_data = generateEigData(
             variants,
             model_label,
             rep_label=rep_label,
             mnm_frac=mnm_frac,
-            mnm_dist=mnm_dist)
+            mnm_dist=mnm_dist,
+            mnm_num=mnm_num)
 
         util_log.debug("---Generating data without MNMs---")
         util_log.debug("Prefix: %s", eig_data.prefix)
@@ -102,7 +103,8 @@ def process_ts(variants, model_label, rep_label, mnm_frac, mnm_dist, method,
             model_label,
             rep_label=rep_label,
             mnm_frac=mnm_frac,
-            mnm_dist=mnm_dist)
+            mnm_dist=mnm_dist,
+            mnm_num=mnm_num)
 
         util_log.debug("---Generating data without MNMs---")
         util_log.debug("Prefix: %s", vcf_data.prefix)
@@ -142,7 +144,8 @@ class generateVCFData:
                  model_label,
                  rep_label=0,
                  mnm_frac=0,
-                 mnm_dist=0):
+                 mnm_dist=0,
+                 mnm_num=0):
         self.variants = variants
         self.model_label = model_label
         self.rep_label = rep_label
@@ -152,6 +155,7 @@ class generateVCFData:
             self.sim_mnms = False
         self.mnm_frac = mnm_frac
         self.mnm_dist = mnm_dist
+        self.mnm_num = mnm_num
         self.vcf = self.vcf()
         self.prefix = self.prefix()
 
@@ -209,7 +213,10 @@ class generateVCFData:
 
             random.seed(int(snv[1]))
             if random.random() < self.mnm_frac:
-                num_clust = math.ceil(random.random() * 4) + 1
+                if(self.mnm_num == 0):
+                    num_clust = math.ceil(random.random() * 4) + 1
+                else:
+                    num_clust = self.mnm_num
                 repeat_rows.append(num_clust)
                 dist = random.randint(10, self.mnm_dist)
 
@@ -228,7 +235,7 @@ class generateVCFData:
 
         # util_log.debug("\t".join(snv_df[i]) for i in range(0, 4))
         mnm_prefix = self.prefix + "_mnm" + str(self.mnm_dist) + "-" + str(
-            self.mnm_frac)
+            self.mnm_frac) + "-" + str(self.mnm_num)
 
         return mnmVCFData(
             vcf=snv_df, prefix=mnm_prefix, repeat_rows=repeat_rows)
@@ -308,7 +315,8 @@ class generateEigData:
                  model_label,
                  rep_label=0,
                  mnm_frac=0,
-                 mnm_dist=0):
+                 mnm_dist=0,
+                 mnm_num=0):
         # self.ts = ts
         self.variants = variants
         self.model_label = model_label
@@ -319,6 +327,7 @@ class generateEigData:
             self.sim_mnms = False
         self.mnm_frac = mnm_frac
         self.mnm_dist = mnm_dist
+        self.mnm_num = mnm_num
         self.geno = self.geno()
         self.snp = self.snp()
         self.prefix = self.prefix()
@@ -390,7 +399,10 @@ class generateEigData:
 
             random.seed(snp['POS'])
             if random.random() < self.mnm_frac:
-                num_clust = math.ceil(random.random() * 4) + 1
+                if(self.mnm_num == 0):
+                    num_clust = math.ceil(random.random() * 4) + 1
+                else:
+                    num_clust = self.mnm_num
                 repeat_rows.append(num_clust)
 
                 dist = random.randint(1, self.mnm_dist)
@@ -408,7 +420,7 @@ class generateEigData:
         geno_mat_mnm = np.repeat(self.geno, repeats=repeat_rows, axis=0)
 
         mnm_prefix = self.prefix + "_mnm" + str(self.mnm_dist) + "-" + str(
-            self.mnm_frac)
+            self.mnm_frac)  + "-" + str(self.mnm_num)
 
         return mnmEigData(
             geno=geno_mat_mnm,

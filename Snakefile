@@ -10,6 +10,7 @@ if not os.path.exists("log"):
 modelNAME = config["modelNAME"]
 MNM_dist = config["MNM_dist"]
 MNM_frac = config["MNM_frac"]
+MNM_num = config["MNM_num"]
 replicates = config["replicates"]
 GeneticMap = config["GeneticMap"]
 popIDs = config["popIDs"]
@@ -19,6 +20,8 @@ sampleSize = config["sampleSize"]
 segmentLength = config["segmentLength"]
 
 MODELS = ["GutenkunstThreePop", "TennessenTwoPop", "RagsdaleArchaic"]
+
+MNM_CFG = "mnm%s-%s-%s" % (MNM_dist, MNM_frac, MNM_num)
 
 #-----------------------------------------------------------------------------
 # Set final targets
@@ -30,13 +33,13 @@ rule all:
 	input:
 		expand("output/ArchIE/{model_name}/{model_name}_{mnm_status}_{pop}_predicted.txt", # , #, #% (modelNAME, modelNAME),
 			model_name = MODELS,
-			mnm_status=["mnm%s-%s" % (MNM_dist, MNM_frac), "womnm"],
+			mnm_status=[MNM_CFG, "womnm"],
 			pop=["afr", "eur"]),
 		# expand("output/ArchIE/{model_name}/{model_name}_womnm_{pop}_predicted.txt" , #, #% (modelNAME, modelNAME), pop=["afr", "eur"]),
 		# expand("output/ArchIE/{model_name}/{model_name}_mnm%s-%s_{pop}_test_data.txt" % (modelNAME, modelNAME, MNM_dist, MNM_frac), pop=["afr", "eur"]),
 		expand("output/ArchIE/{model_name}/{model_name}_{mnm_status}_{pop}_test_data.txt" , #, #% (modelNAME, modelNAME),
 			model_name = MODELS,
-			mnm_status=["mnm%s-%s" % (MNM_dist, MNM_frac), "womnm"],
+			mnm_status=[MNM_CFG, "womnm"],
 			pop=["afr", "eur"]),
 		expand("output/sprime/{model_name}/sinaplot_topSegment_wMNM_vs_womnm.out.score.pdf" , #% modelNAME
 			model_name = MODELS)
@@ -53,11 +56,11 @@ rule sim_data_archie:
 	# input:
 	# 	outG = "output/msprime/{model_name}/{model_name}.%s.indID" % (modelNAME, modelNAME, outgrp)
 	output:
-		snp = "output/msprime/{model_name}/{model_name}_rep{replicate}_mnm%s-%s.snp" % (MNM_dist, MNM_frac),
-		geno_afr = "output/msprime/{model_name}/{model_name}_rep{replicate}_mnm%s-%s_afr.geno" % (MNM_dist, MNM_frac),
-		geno_eur = "output/msprime/{model_name}/{model_name}_rep{replicate}_mnm%s-%s_eur.geno" % (MNM_dist, MNM_frac),
-		ind_afr = "output/msprime/{model_name}/{model_name}_rep{replicate}_mnm%s-%s_afr.ind" % (MNM_dist, MNM_frac),
-		ind_eur = "output/msprime/{model_name}/{model_name}_rep{replicate}_mnm%s-%s_eur.ind" % (MNM_dist, MNM_frac),
+		snp = "output/msprime/{model_name}/{model_name}_rep{replicate}_%s.snp" % MNM_CFG,
+		geno_afr = "output/msprime/{model_name}/{model_name}_rep{replicate}_%s_afr.geno" % MNM_CFG,
+		geno_eur = "output/msprime/{model_name}/{model_name}_rep{replicate}_%s_eur.geno" % MNM_CFG,
+		ind_afr = "output/msprime/{model_name}/{model_name}_rep{replicate}_%s_afr.ind" % MNM_CFG,
+		ind_eur = "output/msprime/{model_name}/{model_name}_rep{replicate}_%s_eur.ind" % MNM_CFG,
 		snp_womnm = "output/msprime/{model_name}/{model_name}_rep{replicate}.snp" , #, #% (modelNAME, modelNAME),
 		geno_afr_womnm = "output/msprime/{model_name}/{model_name}_rep{replicate}_afr.geno" , #, #% (modelNAME, modelNAME),
 		geno_eur_womnm = "output/msprime/{model_name}/{model_name}_rep{replicate}_eur.geno" , #, #% (modelNAME, modelNAME),
@@ -66,7 +69,7 @@ rule sim_data_archie:
 	params:
 		sge_opts = "-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
 	run:
-		shell(" python eval_models.py --replicates 1 --replicate_ID {wildcards.replicate} --length {segmentLength} --mnm_dist {MNM_dist} --mnm_frac {MNM_frac} --demographic_model {wildcards.model_name} --method archie")
+		shell(" python eval_models.py --replicates 1 --replicate_ID {wildcards.replicate} --length {segmentLength} --mnm_dist {MNM_dist} --mnm_frac {MNM_frac} --mnm_num {MNM_num} --demographic_model {wildcards.model_name} --method archie")
 
 
 #-----------------------------------------------------------------------------
@@ -75,12 +78,12 @@ rule sim_data_archie:
 #-----------------------------------------------------------------------------
 rule archie_stats_MNM_eur:
 	input:
-		snp = "output/msprime/{model_name}/{model_name}_rep{replicate}_mnm%s-%s.snp" % (MNM_dist, MNM_frac),
-		geno_eur = "output/msprime/{model_name}/{model_name}_rep{replicate}_mnm%s-%s_eur.geno" % (MNM_dist, MNM_frac),
-		geno_afr = "output/msprime/{model_name}/{model_name}_rep{replicate}_mnm%s-%s_afr.geno" % (MNM_dist, MNM_frac),
-		ind_eur = "output/msprime/{model_name}/{model_name}_rep{replicate}_mnm%s-%s_eur.ind" % (MNM_dist, MNM_frac),
+		snp = "output/msprime/{model_name}/{model_name}_rep{replicate}_%s.snp" % MNM_CFG,
+		geno_eur = "output/msprime/{model_name}/{model_name}_rep{replicate}_%s_eur.geno" % MNM_CFG,
+		geno_afr = "output/msprime/{model_name}/{model_name}_rep{replicate}_%s_afr.geno" % MNM_CFG,
+		ind_eur = "output/msprime/{model_name}/{model_name}_rep{replicate}_%s_eur.ind" % MNM_CFG,
 	output:
-		archie_out_eur = "output/ArchIE/{model_name}/{model_name}_rep{replicate}_mnm%s-%s_eur.txt" % (MNM_dist, MNM_frac)
+		archie_out_eur = "output/ArchIE/{model_name}/{model_name}_rep{replicate}_%s_eur.txt" % MNM_CFG,
 	params:
 		sge_opts = "-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
 	wildcard_constraints:
@@ -109,12 +112,12 @@ rule archie_stats_womnm_eur:
 #-----------------------------------------------------------------------------
 rule archie_stats_MNM_afr:
 	input:
-		snp = "output/msprime/{model_name}/{model_name}_rep{replicate}_mnm%s-%s.snp" % (MNM_dist, MNM_frac),
-		geno_afr = "output/msprime/{model_name}/{model_name}_rep{replicate}_mnm%s-%s_afr.geno" % (MNM_dist, MNM_frac),
-		geno_eur = "output/msprime/{model_name}/{model_name}_rep{replicate}_mnm%s-%s_eur.geno" % (MNM_dist, MNM_frac),
-		ind_afr = "output/msprime/{model_name}/{model_name}_rep{replicate}_mnm%s-%s_afr.ind" % (MNM_dist, MNM_frac),
+		snp = "output/msprime/{model_name}/{model_name}_rep{replicate}_%s.snp" % MNM_CFG,
+		geno_afr = "output/msprime/{model_name}/{model_name}_rep{replicate}_%s_afr.geno" % MNM_CFG,
+		geno_eur = "output/msprime/{model_name}/{model_name}_rep{replicate}_%s_eur.geno" % MNM_CFG,
+		ind_afr = "output/msprime/{model_name}/{model_name}_rep{replicate}_%s_afr.ind" % MNM_CFG,
 	output:
-		archie_out_afr = "output/ArchIE/{model_name}/{model_name}_rep{replicate}_mnm%s-%s_afr.txt" % (MNM_dist, MNM_frac),
+		archie_out_afr = "output/ArchIE/{model_name}/{model_name}_rep{replicate}_%s_afr.txt" % MNM_CFG,
 	params:
 		sge_opts = "-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
 	wildcard_constraints:
@@ -224,13 +227,13 @@ rule sim_data_sprime:
 	input:
 		outG = "output/msprime/{model_name}/{model_name}.%s.indID" % outgrp
 	output:
-		vcf = "output/msprime/{model_name}/{model_name}_rep{replicate}_mnm%s-%s.vcf" % (MNM_dist, MNM_frac),
+		vcf = "output/msprime/{model_name}/{model_name}_rep{replicate}_%s.vcf" % MNM_CFG,
 		vcf_womnm = "output/msprime/{model_name}/{model_name}_rep{replicate}.vcf", #% (modelNAME, modelNAME)
 	params:
 	    sge_opts = "-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
 	run:
 		if modelNAME == "GutenkunstThreePop":
-			shell(" python eval_models.py --replicates 1 --replicate_ID {wildcards.replicate} --length {segmentLength} --mnm_dist {MNM_dist} --mnm_frac {MNM_frac} --demographic_model {wildcards.model_name} --method sprime")
+			shell(" python eval_models.py --replicates 1 --replicate_ID {wildcards.replicate} --length {segmentLength} --mnm_dist {MNM_dist} --mnm_frac {MNM_frac} --mnm_num {MNM_num} --demographic_model {wildcards.model_name} --method sprime")
 
 		# else:
 		# 	shell(" python eval_models.py {wildcards.replicate} {segmentLength} {MNM_dist} {MNM_frac} | \
@@ -260,10 +263,10 @@ rule process_vcf_womnm:
 #-----------------------------------------------------------------------------
 rule process_vcf_wMNM:
     input:
-        vcf = "output/msprime/{model_name}/{model_name}_rep{replicate}_mnm%s-%s.vcf" % (MNM_dist, MNM_frac),
+        vcf = "output/msprime/{model_name}/{model_name}_rep{replicate}_%s.vcf" % MNM_CFG,
         rm_ids = "output/msprime/{model_name}/{model_name}.%s.indID"  % rmPopID
     output:
-        vcf = "output/msprime/{model_name}/{model_name}_rep{replicate}_mnm%s-%s.vcf.gz" % (MNM_dist, MNM_frac)
+        vcf = "output/msprime/{model_name}/{model_name}_rep{replicate}_%s.vcf.gz" % MNM_CFG,
     params:
 	    sge_opts = "-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
     run:
