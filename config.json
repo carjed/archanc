@@ -3,7 +3,7 @@
 	"MNM_dist": 100,
 	"MNM_frac": 0.015,
 	"MNM_num": 2,
-	"replicates": 20,
+	"replicates": 200,
 	"GeneticMap": "src/data/recombination.1e-8_1Mbp.map",
 	"popIDs": ["AFR", "EUR", "EA"],
 	"outgrp" : "AFR",

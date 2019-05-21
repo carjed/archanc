@@ -23,12 +23,14 @@ MODELS = ["GutenkunstThreePop", "TennessenTwoPop", "RagsdaleArchaic"]
 
 MNM_CFG = "mnm%s-%s-%s" % (MNM_dist, MNM_frac, MNM_num)
 
+wildcard_constraints:
+	replicate = "\d+"
+
 #-----------------------------------------------------------------------------
 # Set final targets
 #-----------------------------------------------------------------------------
 rule all:
 	wildcard_constraints:
-		replicate = "\d+",
 		pop = "[afr|eur]"
 	input:
 		expand("output/ArchIE/{model_name}/{model_name}_{mnm_status}_{pop}_predicted.txt", # , #, #% (modelNAME, modelNAME),
@@ -86,8 +88,6 @@ rule archie_stats_MNM_eur:
 		archie_out_eur = "output/ArchIE/{model_name}/{model_name}_rep{replicate}_%s_eur.txt" % MNM_CFG,
 	params:
 		sge_opts = "-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
-	wildcard_constraints:
-		replicate="\d+"
 	run:
 		shell("python src/ArchIE/data/calc_stats_window_data.py -s {input.snp} -i {input.ind_eur} -a {input.geno_eur} -r {input.geno_afr} -c 1 -b 0 -e 50000 -w 50000 -z 50000 > {output.archie_out_eur} ")
 
@@ -101,8 +101,6 @@ rule archie_stats_womnm_eur:
 		archie_out_eur = "output/ArchIE/{model_name}/{model_name}_rep{replicate}_womnm_eur.txt" , #% (modelNAME, modelNAME)
 	params:
 		sge_opts = "-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
-	wildcard_constraints:
-		replicate="\d+"
 	run:
 		shell("python src/ArchIE/data/calc_stats_window_data.py -s {input.snp} -i {input.ind_eur} -a {input.geno_eur} -r {input.geno_afr} -c 1 -b 0 -e 50000 -w 50000 -z 50000 > {output.archie_out_eur} ")
 
@@ -120,8 +118,6 @@ rule archie_stats_MNM_afr:
 		archie_out_afr = "output/ArchIE/{model_name}/{model_name}_rep{replicate}_%s_afr.txt" % MNM_CFG,
 	params:
 		sge_opts = "-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
-	wildcard_constraints:
-		replicate="\d+"
 	run:
 		shell("python src/ArchIE/data/calc_stats_window_data.py -s {input.snp} -i {input.ind_afr} -a {input.geno_afr} -r {input.geno_eur} -c 1 -b 0 -e 50000 -w 50000 -z 50000 > {output.archie_out_afr}")
 
@@ -135,8 +131,6 @@ rule archie_stats_womnm_afr:
 		archie_out_afr = "output/ArchIE/{model_name}/{model_name}_rep{replicate}_womnm_afr.txt" , #% (modelNAME, modelNAME)
 	params:
 		sge_opts = "-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
-	wildcard_constraints:
-		replicate="\d+"
 	run:
 		shell("python src/ArchIE/data/calc_stats_window_data.py -s {input.snp} -i {input.ind_afr} -a {input.geno_afr} -r {input.geno_eur} -c 1 -b 0 -e 50000 -w 50000 -z 50000 > {output.archie_out_afr}")
 
@@ -157,8 +151,6 @@ rule archie_merge:
 		"output/ArchIE/{model_name}/{model_name}_{mnm_status}_{pop}_test_data.txt" , #% (modelNAME, modelNAME)
 	params:
 		sge_opts = "-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
-	wildcard_constraints:
-		replicate = "\d+"
 	run:
 		shell("cat {input} > {output}")
 
