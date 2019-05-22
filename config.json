@@ -8,6 +8,6 @@
 	"popIDs": ["AFR", "EUR", "EA"],
 	"outgrp" : "AFR",
 	"rmPopID": "EA",
-	"sampleSize": 50,
+	"sampleSize": 100,
 	"segmentLength": 50000
 }
