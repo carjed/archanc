@@ -43,8 +43,8 @@ rule all:
 			model_name = MODELS,
 			mnm_status=[MNM_CFG, "womnm"],
 			pop=["afr", "eur"]),
-		expand("output/sprime/{model_name}/sinaplot_topSegment_wMNM_vs_womnm.out.score.pdf" , #% modelNAME
-			model_name = MODELS)
+		# expand("output/sprime/{model_name}/sinaplot_topSegment_wMNM_vs_womnm.out.score.pdf" , #% modelNAME
+			# model_name = MODELS)
     	# "output/ArchIE/{model_name}/{model_name}_rep{replicate}_mnm%s-%s.txt" % (modelNAME, modelNAME, MNM_dist, MNM_frac),
     	# expand("output/ArchIE/{model_name}/{model_name}_rep{replicate}_mnm%s-%s_afr.txt" % (modelNAME, modelNAME, MNM_dist, MNM_frac), replicate=range(1, replicates+1)),
     	# "output/ArchIE/{model_name}/{model_name}_mnm%s-%s_eur_predicted.txt" % (modelNAME, modelNAME, MNM_dist, MNM_frac),
@@ -194,140 +194,140 @@ rule archie_predict:
 		shell("set +o pipefail; Rscript ArchIE_predict.R {input.training_data} {input.testing_data} {output.predicted_data}")
 
 
-#-----------------------------------------------------------------------------
-# Get sample IDs per group
-#-----------------------------------------------------------------------------
-rule output_IDfiles:
-	output:
-		expand("output/msprime/{model_name}/{model_name}.{ID}.indID",
-			model_name = MODELS,
-			ID=popIDs)
-	params:
-	    sge_opts = "-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
-	run:
-		for outfile in output:
-			ID = outfile.split(".")[1]
-			with open(outfile, "w") as fout:
-				for i in range(sampleSize):
-					fout.write("%s_ind%s" % (ID, i) + "\n")
+# #-----------------------------------------------------------------------------
+# # Get sample IDs per group
+# #-----------------------------------------------------------------------------
+# rule output_IDfiles:
+# 	output:
+# 		expand("output/msprime/{model_name}/{model_name}.{ID}.indID",
+# 			model_name = MODELS,
+# 			ID=popIDs)
+# 	params:
+# 	    sge_opts = "-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
+# 	run:
+# 		for outfile in output:
+# 			ID = outfile.split(".")[1]
+# 			with open(outfile, "w") as fout:
+# 				for i in range(sampleSize):
+# 					fout.write("%s_ind%s" % (ID, i) + "\n")
 
 
-#-----------------------------------------------------------------------------
-# Simulate and output in VCF format
-#-----------------------------------------------------------------------------
-rule sim_data_sprime:
-	input:
-		outG = "output/msprime/{model_name}/{model_name}.%s.indID" % outgrp
-	output:
-		vcf = "output/msprime/{model_name}/{model_name}_rep{replicate}_%s.vcf" % MNM_CFG,
-		vcf_womnm = "output/msprime/{model_name}/{model_name}_rep{replicate}.vcf", #% (modelNAME, modelNAME)
-	params:
-	    sge_opts = "-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
-	run:
-		if modelNAME == "GutenkunstThreePop":
-			shell(" python eval_models.py --replicates 1 --replicate_ID {wildcards.replicate} --length {segmentLength} --mnm_dist {MNM_dist} --mnm_frac {MNM_frac} --mnm_num {MNM_num} --demographic_model {wildcards.model_name} --method sprime")
+# #-----------------------------------------------------------------------------
+# # Simulate and output in VCF format
+# #-----------------------------------------------------------------------------
+# rule sim_data_sprime:
+# 	input:
+# 		outG = "output/msprime/{model_name}/{model_name}.%s.indID" % outgrp
+# 	output:
+# 		vcf = "output/msprime/{model_name}/{model_name}_rep{replicate}_%s.vcf" % MNM_CFG,
+# 		vcf_womnm = "output/msprime/{model_name}/{model_name}_rep{replicate}.vcf", #% (modelNAME, modelNAME)
+# 	params:
+# 	    sge_opts = "-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
+# 	run:
+# 		if modelNAME == "GutenkunstThreePop":
+# 			shell(" python eval_models.py --replicates 1 --replicate_ID {wildcards.replicate} --length {segmentLength} --mnm_dist {MNM_dist} --mnm_frac {MNM_frac} --mnm_num {MNM_num} --demographic_model {wildcards.model_name} --method sprime")
 
-		# else:
-		# 	shell(" python eval_models.py {wildcards.replicate} {segmentLength} {MNM_dist} {MNM_frac} | \
-		# 	    awk '$1 ~ /^#/ {{print $0;next}} {{print $0 | "sort -k1,1 -k2,2n"}}' | \
-		# 	    bgzip -c > {output.vcf}")
-
-
-#-----------------------------------------------------------------------------
-# clean up non-MNM VCF
-#-----------------------------------------------------------------------------
-rule process_vcf_womnm:
-    input:
-        vcf = "output/msprime/{model_name}/{model_name}_rep{replicate}.vcf", #, #% (modelNAME, modelNAME),
-        rm_ids = "output/msprime/{model_name}/{model_name}.%s.indID"  % rmPopID
-    output:
-        vcf = "output/msprime/{model_name}/{model_name}_rep{replicate}_womnm.vcf.gz" , #% (modelNAME, modelNAME)
-    params:
-	    sge_opts = "-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
-    run:
-        shell("""awk '$1 ~ /^#/ {{print $0;next}} {{print $0 | "sort -k1,1 -k2,2n"}}' {input.vcf} | \
-			    vcftools --vcf - --remove {input.rm_ids} --recode --recode-INFO-all --stdout | \
-			    bgzip -c > {output.vcf}""")
+# 		# else:
+# 		# 	shell(" python eval_models.py {wildcards.replicate} {segmentLength} {MNM_dist} {MNM_frac} | \
+# 		# 	    awk '$1 ~ /^#/ {{print $0;next}} {{print $0 | "sort -k1,1 -k2,2n"}}' | \
+# 		# 	    bgzip -c > {output.vcf}")
 
 
-#-----------------------------------------------------------------------------
-# clean up MNM VCF
-#-----------------------------------------------------------------------------
-rule process_vcf_wMNM:
-    input:
-        vcf = "output/msprime/{model_name}/{model_name}_rep{replicate}_%s.vcf" % MNM_CFG,
-        rm_ids = "output/msprime/{model_name}/{model_name}.%s.indID"  % rmPopID
-    output:
-        vcf = "output/msprime/{model_name}/{model_name}_rep{replicate}_%s.vcf.gz" % MNM_CFG,
-    params:
-	    sge_opts = "-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
-    run:
-        shell("""awk '$1 ~ /^#/ {{print $0;next}} {{print $0 | "sort -k1,1 -k2,2n"}}' {input.vcf} | \
-			    vcftools --vcf - --remove {input.rm_ids} --recode --recode-INFO-all --stdout | \
-			    bgzip -c > {output.vcf}""")
+# #-----------------------------------------------------------------------------
+# # clean up non-MNM VCF
+# #-----------------------------------------------------------------------------
+# rule process_vcf_womnm:
+#     input:
+#         vcf = "output/msprime/{model_name}/{model_name}_rep{replicate}.vcf", #, #% (modelNAME, modelNAME),
+#         rm_ids = "output/msprime/{model_name}/{model_name}.%s.indID"  % rmPopID
+#     output:
+#         vcf = "output/msprime/{model_name}/{model_name}_rep{replicate}_womnm.vcf.gz" , #% (modelNAME, modelNAME)
+#     params:
+# 	    sge_opts = "-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
+#     run:
+#         shell("""awk '$1 ~ /^#/ {{print $0;next}} {{print $0 | "sort -k1,1 -k2,2n"}}' {input.vcf} | \
+# 			    vcftools --vcf - --remove {input.rm_ids} --recode --recode-INFO-all --stdout | \
+# 			    bgzip -c > {output.vcf}""")
 
 
-#-----------------------------------------------------------------------------
-# run sprime on non-MNM data
-#-----------------------------------------------------------------------------
-rule sprime_run:
-	input:
-	    vcf = "output/msprime/{model_name}/{model_name}_rep{replicate}_{mnm_status}.vcf.gz" , #, #% (modelNAME, modelNAME),
-		outG = "output/msprime/{model_name}/{model_name}.%s.indID" % (outgrp)
-	output:
-	    "output/sprime/{model_name}/{model_name}_rep{replicate}_{mnm_status}.sprime.out.score" , #% (modelNAME, modelNAME)
-	params:
-	    sge_opts = "-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
-	run:
-		prefix = ".".join(output[0].split(".")[:-1])
-		shell(" java -jar src/sprime.jar gt={input.vcf} outgroup={input.outG} map={GeneticMap} out={prefix} minscore=1 ")
+# #-----------------------------------------------------------------------------
+# # clean up MNM VCF
+# #-----------------------------------------------------------------------------
+# rule process_vcf_wMNM:
+#     input:
+#         vcf = "output/msprime/{model_name}/{model_name}_rep{replicate}_%s.vcf" % MNM_CFG,
+#         rm_ids = "output/msprime/{model_name}/{model_name}.%s.indID"  % rmPopID
+#     output:
+#         vcf = "output/msprime/{model_name}/{model_name}_rep{replicate}_%s.vcf.gz" % MNM_CFG,
+#     params:
+# 	    sge_opts = "-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
+#     run:
+#         shell("""awk '$1 ~ /^#/ {{print $0;next}} {{print $0 | "sort -k1,1 -k2,2n"}}' {input.vcf} | \
+# 			    vcftools --vcf - --remove {input.rm_ids} --recode --recode-INFO-all --stdout | \
+# 			    bgzip -c > {output.vcf}""")
 
 
-rule sprime_pullTopSegment:
-	input:
-		"output/sprime/{model_name}/{model_name}_rep{replicate}_{mnm_status}.sprime.out.score" , #% (modelNAME, modelNAME)
-	output:
-		"output/sprime/{model_name}/{model_name}_rep{replicate}_{mnm_status}.sprime.out.score.top" , #% (modelNAME, modelNAME)
-	params:
-	    sge_opts="-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
-	shell:
-		" set +o pipefail ; sort -n -r -k8 {input} | head -1 > {output} "
+# #-----------------------------------------------------------------------------
+# # run sprime on non-MNM data
+# #-----------------------------------------------------------------------------
+# rule sprime_run:
+# 	input:
+# 	    vcf = "output/msprime/{model_name}/{model_name}_rep{replicate}_{mnm_status}.vcf.gz" , #, #% (modelNAME, modelNAME),
+# 		outG = "output/msprime/{model_name}/{model_name}.%s.indID" % (outgrp)
+# 	output:
+# 	    "output/sprime/{model_name}/{model_name}_rep{replicate}_{mnm_status}.sprime.out.score" , #% (modelNAME, modelNAME)
+# 	params:
+# 	    sge_opts = "-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
+# 	run:
+# 		prefix = ".".join(output[0].split(".")[:-1])
+# 		shell(" java -jar src/sprime.jar gt={input.vcf} outgroup={input.outG} map={GeneticMap} out={prefix} minscore=1 ")
 
 
-rule sprime_mergeTopSegment:
-	input:
-		# expand("output/sprime/{model_name}/{model_name}_rep{replicate}_{mnm_status}.sprime.out.score.top" , #, #% (modelNAME, modelNAME), replicate=range(1, replicates+1))
-		expand("output/sprime/{{model_name}}/{{model_name}}_rep{replicate}_{{mnm_status}}.sprime.out.score.top" , #, #% (modelNAME, modelNAME),
-			# model_name = MODELS,
-			replicate=range(1, replicates+1))
-			# mnm_status=["mnm%s-%s" % (MNM_dist, MNM_frac), "womnm"])
-		# "output/sprime/{model_name}/{model_name}_rep{replicate}_{mnm_status}.sprime.out.score.top" , #% (modelNAME, modelNAME)
-	output:
-		"output/sprime/{model_name}/topSegment_{mnm_status}.out.score" , #% modelNAME
-	params:
-	    sge_opts="-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
-#	shell:
-#		" cat {input} > {output} ; rm {input} "
-	run:
-		shell(""" cat {input} | grep -v "CHROM" > {output} """)
-#		for f in input:
-#			shell(" cat %s >> {output} " % (f) )
-# 		shell(" echo output/sprime/{model_name}/{model_name}_womnm_rep{{1..%s}}.sprime.out.score.top | \
-# 		    xargs cat | \
-# 		    grep -v "CHROM" > {output} ; echo output/sprime/{model_name}/{model_name}_womnm_rep{{1..%s}}.sprime.out.score.top | xargs rm " % (modelNAME, modelNAME, replicates, modelNAME, modelNAME, replicates) )
-# 		shell(" echo output/sprime/{model_name}/{model_name}_womnm_rep{{1..%s}}.sprime.out.score.top | \
-# 		    xargs cat | \
-# 		    grep -v "CHROM" > {output} ; echo output/sprime/{model_name}/{model_name}_womnm_rep{{1..%s}}.sprime.out.score.top | xargs rm " % (modelNAME, modelNAME, replicates, modelNAME, modelNAME, replicates)
-		# shell(""" echo output/sprime/{model_name}/{model_name}_womnm_rep{{1..%s}}.sprime.out.score.top | \
-		    # xargs cat | grep -v "CHROM" > {output}""" % (modelNAME, modelNAME, replicates))
+# rule sprime_pullTopSegment:
+# 	input:
+# 		"output/sprime/{model_name}/{model_name}_rep{replicate}_{mnm_status}.sprime.out.score" , #% (modelNAME, modelNAME)
+# 	output:
+# 		"output/sprime/{model_name}/{model_name}_rep{replicate}_{mnm_status}.sprime.out.score.top" , #% (modelNAME, modelNAME)
+# 	params:
+# 	    sge_opts="-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
+# 	shell:
+# 		" set +o pipefail ; sort -n -r -k8 {input} | head -1 > {output} "
 
-rule sprime_plot:
-	input:
-	    top_womnm = "output/sprime/{model_name}/topSegment_womnm.out.score" , #, #% modelNAME,
-		top_mnm = "output/sprime/{model_name}/topSegment_wMNM.out.score" , #% modelNAME
-	output:
-		"output/sprime/{model_name}/sinaplot_topSegment_wMNM_vs_womnm.out.score.pdf" , #% modelNAME
-	params:
-	    sge_opts = "-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
-	shell:
-		" Rscript plot_sprime_wMNM_vs_woMNM.r {input.top_mnm} {input.top_womnm} {output} "
+
+# rule sprime_mergeTopSegment:
+# 	input:
+# 		# expand("output/sprime/{model_name}/{model_name}_rep{replicate}_{mnm_status}.sprime.out.score.top" , #, #% (modelNAME, modelNAME), replicate=range(1, replicates+1))
+# 		expand("output/sprime/{{model_name}}/{{model_name}}_rep{replicate}_{{mnm_status}}.sprime.out.score.top" , #, #% (modelNAME, modelNAME),
+# 			# model_name = MODELS,
+# 			replicate=range(1, replicates+1))
+# 			# mnm_status=["mnm%s-%s" % (MNM_dist, MNM_frac), "womnm"])
+# 		# "output/sprime/{model_name}/{model_name}_rep{replicate}_{mnm_status}.sprime.out.score.top" , #% (modelNAME, modelNAME)
+# 	output:
+# 		"output/sprime/{model_name}/topSegment_{mnm_status}.out.score" , #% modelNAME
+# 	params:
+# 	    sge_opts="-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
+# #	shell:
+# #		" cat {input} > {output} ; rm {input} "
+# 	run:
+# 		shell(""" cat {input} | grep -v "CHROM" > {output} """)
+# #		for f in input:
+# #			shell(" cat %s >> {output} " % (f) )
+# # 		shell(" echo output/sprime/{model_name}/{model_name}_womnm_rep{{1..%s}}.sprime.out.score.top | \
+# # 		    xargs cat | \
+# # 		    grep -v "CHROM" > {output} ; echo output/sprime/{model_name}/{model_name}_womnm_rep{{1..%s}}.sprime.out.score.top | xargs rm " % (modelNAME, modelNAME, replicates, modelNAME, modelNAME, replicates) )
+# # 		shell(" echo output/sprime/{model_name}/{model_name}_womnm_rep{{1..%s}}.sprime.out.score.top | \
+# # 		    xargs cat | \
+# # 		    grep -v "CHROM" > {output} ; echo output/sprime/{model_name}/{model_name}_womnm_rep{{1..%s}}.sprime.out.score.top | xargs rm " % (modelNAME, modelNAME, replicates, modelNAME, modelNAME, replicates)
+# 		# shell(""" echo output/sprime/{model_name}/{model_name}_womnm_rep{{1..%s}}.sprime.out.score.top | \
+# 		    # xargs cat | grep -v "CHROM" > {output}""" % (modelNAME, modelNAME, replicates))
+
+# rule sprime_plot:
+# 	input:
+# 	    top_womnm = "output/sprime/{model_name}/topSegment_womnm.out.score" , #, #% modelNAME,
+# 		top_mnm = "output/sprime/{model_name}/topSegment_wMNM.out.score" , #% modelNAME
+# 	output:
+# 		"output/sprime/{model_name}/sinaplot_topSegment_wMNM_vs_womnm.out.score.pdf" , #% modelNAME
+# 	params:
+# 	    sge_opts = "-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
+# 	shell:
+# 		" Rscript plot_sprime_wMNM_vs_woMNM.r {input.top_mnm} {input.top_womnm} {output} "

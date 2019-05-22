@@ -11,6 +11,7 @@ out.log
 __pycache__/**
 
 # output
+output_OLD/**
 output/sprime/**
 output/archie_trained_model.Rdata 
 output/ArchIE/**
