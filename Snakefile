@@ -33,7 +33,7 @@ rule all:
 	wildcard_constraints:
 		pop = "[afr|eur]"
 	input:
-		expand("output/ArchIE/{model_name}/{model_name}_{mnm_status}_{pop}_predicted.txt", # , #, #% (modelNAME, modelNAME),
+		expand("output/ArchIE/{model_name}/{model_name}_{mnm_status}_{pop}_predicted.rds", # , #, #% (modelNAME, modelNAME),
 			model_name = MODELS,
 			mnm_status=[MNM_CFG, "womnm"],
 			pop=["afr", "eur"]),
@@ -172,7 +172,7 @@ rule archie_run_training:
 	input:
 		"src/ArchIE/simulations/training_data.txt"
 	output:
-		"output/ArchIE/archie_trained_model.Rdata"
+		"output/ArchIE/archie_trained_model.rds"
 	params:
 		sge_opts = "-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
 	run:
@@ -184,10 +184,10 @@ rule archie_run_training:
 #-----------------------------------------------------------------------------
 rule archie_predict:
 	input:
-		training_data = "output/ArchIE/archie_trained_model.Rdata",
+		training_data = "output/ArchIE/archie_trained_model.rds",
 		testing_data = "output/ArchIE/{model_name}/{model_name}_{mnm_status}_{pop}_test_data.txt", #% (modelNAME, modelNAME)
 	output:
-		predicted_data = "output/ArchIE/{model_name}/{model_name}_{mnm_status}_{pop}_predicted.txt", #% (modelNAME, modelNAME)
+		predicted_data = "output/ArchIE/{model_name}/{model_name}_{mnm_status}_{pop}_predicted.rds", #% (modelNAME, modelNAME)
 	params:
 		sge_opts = "-l h_rt=120:00:00 -l mfree=4G -l gpfsstate=0"
 	run:
