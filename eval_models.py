@@ -201,6 +201,18 @@ def main():
         pop_samples = [msprime.Sample(0, 0)] * sample_size + \
                 [msprime.Sample(1, 0)] * sample_size
 
+    elif args.demographic_model == "TennessenTwoPopNoAncientMig":
+    
+            demo_model = homo_sapiens.TennessenTwoPopOutOfAfricaNoAncientMig()
+            pop_samples = [msprime.Sample(0, 0)] * sample_size + \
+                    [msprime.Sample(1, 0)] * sample_size
+
+    elif args.demographic_model == "TennessenTwoPopNoMig":
+
+        demo_model = homo_sapiens.TennessenTwoPopOutOfAfricaNoMig()
+        pop_samples = [msprime.Sample(0, 0)] * sample_size + \
+                [msprime.Sample(1, 0)] * sample_size
+
     elif args.demographic_model == "RagsdaleArchaic":
 
         demo_model = homo_sapiens.RagsdaleArchaic()

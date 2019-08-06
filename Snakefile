@@ -19,7 +19,8 @@ rmPopID = config["rmPopID"]
 sampleSize = config["sampleSize"]
 segmentLength = config["segmentLength"]
 
-MODELS = ["GutenkunstThreePop", "TennessenTwoPop", "RagsdaleArchaic"]
+# MODELS = ["GutenkunstThreePop", "TennessenTwoPop", "RagsdaleArchaic"]
+MODELS = ["GutenkunstThreePop", "RagsdaleArchaic", "TennessenTwoPopNoAncientMig", "TennessenTwoPop", "TennessenTwoPopNoMig"]
 
 MNM_CFG = "mnm%s-%s-%s" % (MNM_dist, MNM_frac, MNM_num)
 
